@@ -16,8 +16,15 @@
     "noEmit": true,
     "strict": true,
     "types": [
-      "vite/client"
-    ]
+      "vite/client",
+      "node"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@pfxamd/qr-core": [
+        "core/src/index.ts"
+      ]
+    }
   },
   "include": [
     "src",
