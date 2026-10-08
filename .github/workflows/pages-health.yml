@@ -1,0 +1,25 @@
+name: Check public QR Studio website
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check public URL and report response
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://pfxamd.github.io/pfx-qr-studio/"
+          STATUS=$(curl -L -sS -o /tmp/studio.html -w '%{http_code}' --max-time 25 "$URL")
+          echo "URL: $URL"
+          echo "HTTP status: $STATUS"
+          echo "HTML bytes: $(wc -c </tmp/studio.html)"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Public Pages URL returned HTTP $STATUS"
+            exit 1
+          fi
+          grep -q 'PFx QR Studio' /tmp/studio.html || { echo "::error::Expected app title missing"; exit 1; }
+          echo "Public Pages URL is serving the QR Studio HTML."
