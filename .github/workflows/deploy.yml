@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: pfxamd/pfx-qr-core
+          ref: db8b3ad0ad1100ea9f6e4d3b69cc389bec2a0f3f
           path: core
       - uses: actions/setup-node@v4
         with:
