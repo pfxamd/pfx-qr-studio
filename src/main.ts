@@ -1,6 +1,7 @@
 import { createBrowserQrCore, encodePayload, validateDocument } from '@pfxamd/qr-core';
 import type { QrDocument, QrRenderFormat } from '@pfxamd/qr-core';
 import './style.css';
+import './identity.css';
 
 type Kind = 'url' | 'text' | 'email' | 'phone' | 'sms' | 'wifi';
 type Form = { kind: Kind; value: string; ssid: string; password: string; security: 'WPA' | 'WEP' | 'nopass'; size: number; foreground: string; background: string; correction: 'L'|'M'|'Q'|'H'; dotStyle: QrDocument['dotStyle']; logo?: string; };
@@ -13,7 +14,7 @@ let pending = 0;
 let debounce: ReturnType<typeof setTimeout> | undefined;
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
-  <header class="topbar"><a class="brand" href="./" aria-label="PFx QR Studio home"><img class="brand-logo" src="/pfx-qr-studio/pfx-logo.svg" alt="" width="45" height="40"/><span class="brand-title">PFx QR Studio</span><span class="beta-badge">Alpha 0.1</span></a><span class="top-note">Local-first QR design workspace</span><button id="theme" class="ghost" type="button">Theme</button></header>
+  <header class="topbar"><a class="brand" href="./" aria-label="PFx QR Studio home"><img class="brand-logo" src="/pfx-qr-studio/pfx-logo.svg" alt="" width="45" height="40"/><span class="brand-title">PFx QR Studio</span><span class="alpha-badge">Alpha 0.1</span></a><span class="top-note">Local-first QR design workspace</span><button id="theme" class="ghost" type="button">Theme</button></header>
   <main class="workspace">
     <section class="editor" aria-label="QR settings">
       <div class="section-heading"><span class="eyebrow">DESIGN WORKSPACE</span><h1>Create QR code</h1><p>Configure your content and customize the result.</p></div>
