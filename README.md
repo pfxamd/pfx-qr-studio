@@ -14,6 +14,10 @@ Live application: https://pfxamd.github.io/pfx-qr-studio/
 - Scan PNG/JPEG/WebP QR images locally and copy decoded results.
 - Responsive light/dark interface, with local preference storage. Images are processed in your browser, not uploaded.
 
+## Workspace design
+
+The Studio uses a fixed-height, no-page-scroll application layout inspired by the PFxAMD visual identity. A compact tool rail switches between Content, Design, Output, and Scanner; the preview and download tools remain in view. On small screens, settings open in an overlay above the QR canvas. The interface includes the PFxAMD signature in its footer.
+
 ## Architecture
 
 The generation and scanning engine is maintained separately in [PFx QR Core](https://github.com/pfxamd/pfx-qr-core). Studio imports its public API; its build pins a specific QR Core commit for reproducible deployments.
