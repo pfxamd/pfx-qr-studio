@@ -122,9 +122,9 @@ app.innerHTML = `<header class="app-topbar">
     <div class="action-dock">
       <div class="dock-caption"><span class="micro-label">EXPORT STUDIO</span><span id="payload-preview">Ready to create.</span></div>
       <div class="dock-controls"><select id="format" title="Export format" aria-label="Download format"><option value="png">PNG</option><option value="svg">SVG</option><option value="webp">WebP</option></select>
-        <button id="verify" class="secondary icon-action" type="button" disabled>${icons.check}<span>Test scan</span></button>
-        <button id="copy-image" class="secondary icon-action" type="button" disabled>${icons.copy}<span>Copy PNG</span></button>
-        <button id="copy-content" class="secondary icon-action" type="button">${icons.content}<span>Copy data</span></button>
+        <button id="verify" class="secondary icon-action" type="button" aria-label="Test QR scanning" title="Test QR scanning" disabled>${icons.check}<span>Test scan</span></button>
+        <button id="copy-image" class="secondary icon-action" type="button" aria-label="Copy QR as PNG" title="Copy QR as PNG" disabled>${icons.copy}<span>Copy PNG</span></button>
+        <button id="copy-content" class="secondary icon-action" type="button" aria-label="Copy QR content" title="Copy QR content">${icons.content}<span>Copy data</span></button>
         <button id="download" class="download-action" type="button" disabled>Download QR ${icons.arrow}</button>
       </div>
     </div>
