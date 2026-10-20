@@ -9,7 +9,9 @@ const initial: Form = {kind:'url',value:'https://example.com',ssid:'',password:'
 const saved = localStorage.getItem('pfx-qr-studio-preferences');
 let state: Form = {...initial};
 if (saved) { try {const json: unknown=JSON.parse(saved); if(json && typeof json==='object'){const o=json as Partial<Form>;state={...initial,...o,logo:undefined};}} catch {/* ignore invalid storage */} }
-let lastValid: {blob: Blob; format: QrRenderFormat} | null = null;
+let lastValid: {blob: Blob; payload: string} | null = null;
+let lastDecoded = '';
+let scanTicket = 0;
 let pending = 0;
 let debounce: ReturnType<typeof setTimeout> | undefined;
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -59,6 +61,7 @@ const $ = <T extends HTMLElement>(selector:string) => document.querySelector<T>(
 const el = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const preview=el<HTMLImageElement>('qr-preview');
 let objectUrl: string | null=null;
+const valuesByKind: Partial<Record<Kind,string>> = {[state.kind]:state.value};
 const corePromise=createBrowserQrCore();
 function displayFields() {
   const container=el<HTMLDivElement>('content-fields');
@@ -105,7 +108,22 @@ function documentData():QrDocument {
   return {payload,size:state.size,margin:state.margin,foreground:state.foreground,background:state.background,correction:state.correction,dotStyle:state.dotStyle,...(state.logo?{logo:state.logo}:{})};
 }
 function feedback(message:string, isError=false) {const elx=el<HTMLDivElement>('feedback');elx.hidden=!message;elx.textContent=message;elx.classList.toggle('error',isError);}
-function schedule() {clearTimeout(debounce);pending++;el<HTMLButtonElement>('download').disabled=true;el<HTMLElement>('status').textContent='Updating…';debounce=setTimeout(()=>{void render(pending);},180);}
+function savePreferences() {
+  const {logo,...settings}=state;
+  localStorage.setItem('pfx-qr-studio-preferences',JSON.stringify(settings));
+}
+function schedule() {
+  clearTimeout(debounce);
+  pending++;
+  savePreferences();
+  lastValid=null;
+  el<HTMLButtonElement>('download').disabled=true;
+  el<HTMLButtonElement>('verify').disabled=true;
+  el<HTMLButtonElement>('copy-image').disabled=true;
+  el<HTMLElement>('verified-state').textContent='';
+  el<HTMLElement>('status').textContent='Updating…';
+  debounce=setTimeout(()=>{void render(pending);},180);
+}
 async function render(ticket:number) {
   try {
     const doc=documentData();
@@ -119,8 +137,10 @@ async function render(ticket:number) {
     preview.src=url;
     if(objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl=url;
-    lastValid={blob,format:'png'};
+    lastValid={blob,payload:doc.payload};
     el<HTMLButtonElement>('download').disabled=false;
+    el<HTMLButtonElement>('verify').disabled=false;
+    el<HTMLButtonElement>('copy-image').disabled=false;
     el<HTMLElement>('status').textContent='Ready';
     feedback(validation.warnings.join(' · '));
   }catch(error) {
@@ -131,13 +151,19 @@ async function render(ticket:number) {
     feedback(error instanceof Error?error.message:String(error),true);
   }
 }
-for(const key of ['foreground','background','correction','dotStyle','size'] as const){
+function syncPalettes() {
+  document.querySelectorAll<HTMLButtonElement>('.preset').forEach(button=>{
+    button.classList.toggle('selected',button.dataset.foreground===state.foreground && button.dataset.background===state.background);
+  });
+}
+for(const key of ['foreground','background','correction','dotStyle','size','margin'] as const){
   const field=el<HTMLInputElement|HTMLSelectElement>(key);field.value=String(state[key]);
-  field.addEventListener('input',()=>{state={...state,[key]:key==='size'?Number(field.value):field.value};if(key==='size')el<HTMLOutputElement>('size-output').textContent=field.value+' px';schedule();});
+  field.addEventListener('input',()=>{state={...state,[key]:key==='size'?Number(field.value):field.value};if(key==='size'||key==='margin')el<HTMLOutputElement>(key+'-output').textContent=field.value+' px';syncPalettes();schedule();});
 }
 el<HTMLOutputElement>('size-output').textContent=state.size+' px';
+el<HTMLOutputElement>('margin-output').textContent=state.margin+' px';
 el<HTMLSelectElement>('kind').value=state.kind;
-el<HTMLSelectElement>('kind').addEventListener('change',e=>{state.kind=(e.target as HTMLSelectElement).value as Kind;displayFields();schedule();});
+el<HTMLSelectElement>('kind').addEventListener('change',e=>{valuesByKind[state.kind]=state.value;const kind=(e.target as HTMLSelectElement).value as Kind;state.kind=kind;state.value=valuesByKind[kind]??(kind==='url'?'https://example.com':'');displayFields();schedule();});
 el<HTMLInputElement>('logo').addEventListener('change',async e=>{
   const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
   if(file.size>1_500_000){feedback('Logo must be smaller than 1.5 MB',true);return;}
@@ -158,7 +184,100 @@ el<HTMLButtonElement>('download').addEventListener('click',async ()=>{
     setTimeout(()=>URL.revokeObjectURL(url),1000);
   }catch(error){feedback(error instanceof Error?error.message:String(error),true);}
 });
-el<HTMLButtonElement>('theme').addEventListener('click',()=>{document.documentElement.classList.toggle('dark');localStorage.setItem('pfx-qr-studio-theme',document.documentElement.classList.contains('dark')?'dark':'light');});
-if(localStorage.getItem('pfx-qr-studio-theme')==='dark')document.documentElement.classList.add('dark');
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){const {logo,...settings}=state;localStorage.setItem('pfx-qr-studio-preferences',JSON.stringify(settings));}});
+function setTheme(isDark:boolean) {
+  document.documentElement.classList.toggle('dark',isDark);
+  el<HTMLButtonElement>('theme').textContent=isDark?'Light mode':'Dark mode';
+  localStorage.setItem('pfx-qr-studio-theme',isDark?'dark':'light');
+}
+el<HTMLButtonElement>('theme').addEventListener('click',()=>setTheme(!document.documentElement.classList.contains('dark')));
+setTheme(localStorage.getItem('pfx-qr-studio-theme')==='dark');
+document.querySelectorAll<HTMLButtonElement>('.preset').forEach(button=>{
+  button.addEventListener('click',()=>{
+    state.foreground=button.dataset.foreground??initial.foreground;
+    state.background=button.dataset.background??initial.background;
+    el<HTMLInputElement>('foreground').value=state.foreground;
+    el<HTMLInputElement>('background').value=state.background;
+    syncPalettes();schedule();
+  });
+});
+el<HTMLButtonElement>('reset').addEventListener('click',()=>{
+  state={...initial};
+  for(const k of ['foreground','background','correction','dotStyle','size','margin'] as const)el<HTMLInputElement|HTMLSelectElement>(k).value=String(state[k]);
+  el<HTMLOutputElement>('size-output').textContent=state.size+' px';
+  el<HTMLOutputElement>('margin-output').textContent=state.margin+' px';
+  el<HTMLSelectElement>('kind').value=state.kind;
+  el<HTMLInputElement>('logo').value='';
+  for(const k of Object.keys(valuesByKind) as Kind[])delete valuesByKind[k];
+  valuesByKind.url=state.value;
+  displayFields();syncPalettes();schedule();
+});
+el<HTMLButtonElement>('verify').addEventListener('click',async()=>{
+  const item=lastValid;
+  if(!item)return;
+  const output=el<HTMLElement>('verified-state');
+  output.textContent='Testing the QR with the built-in scanner…';
+  output.className='verified-state';
+  try {
+    const core=await corePromise;
+    const result=await core.verify(item.blob,item.payload);
+    if(item!==lastValid)return;
+    output.textContent=result?'Scan passed — QR content matches.':'Scan did not match. Try a higher-contrast design.';
+    output.className='verified-state '+(result?'success':'failure');
+  }catch(error) {
+    if(item!==lastValid)return;
+    output.textContent='Could not test scan: '+(error instanceof Error?error.message:String(error));
+    output.className='verified-state failure';
+  }
+});
+el<HTMLButtonElement>('copy-image').addEventListener('click',async()=>{
+  const item=lastValid;if(!item)return;
+  try {
+    if(!navigator.clipboard?.write||typeof ClipboardItem==='undefined')throw new Error('Image clipboard is not available in this browser');
+    await navigator.clipboard.write([new ClipboardItem({'image/png':item.blob})]);
+    el<HTMLElement>('verified-state').textContent='PNG copied to clipboard.';
+  }catch(error){feedback(error instanceof Error?error.message:String(error),true);}
+});
+el<HTMLButtonElement>('copy-content').addEventListener('click',async()=>{
+  try{
+    await navigator.clipboard.writeText(documentData().payload);
+    el<HTMLElement>('verified-state').textContent='QR content copied.';
+  }catch(error){feedback(error instanceof Error?error.message:String(error),true);}
+});
+el<HTMLInputElement>('scan-file').addEventListener('change',async event=>{
+  const file=(event.target as HTMLInputElement).files?.[0];
+  if(!file)return;
+  const ticket=++scanTicket;
+  const status=el<HTMLElement>('scan-status');
+  const wrap=el<HTMLElement>('scan-result-wrap');
+  wrap.hidden=true;
+  lastDecoded='';
+  if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>10_000_000){
+    status.textContent='Choose a PNG, JPEG or WebP image smaller than 10 MB.';
+    status.className='scan-status failure';
+    return;
+  }
+  status.textContent='Scanning image locally…';
+  status.className='scan-status';
+  try {
+    const core=await corePromise;
+    const decoded=await core.decode(file);
+    if(ticket!==scanTicket)return;
+    if(decoded===null){status.textContent='No QR code found in this image.';status.className='scan-status failure';return;}
+    lastDecoded=decoded;
+    el<HTMLTextAreaElement>('scan-result').value=decoded;
+    wrap.hidden=false;
+    status.textContent='QR decoded successfully.';
+    status.className='scan-status success';
+  }catch(error){
+    if(ticket!==scanTicket)return;
+    status.textContent='Unable to scan: '+(error instanceof Error?error.message:String(error));
+    status.className='scan-status failure';
+  }
+});
+el<HTMLButtonElement>('copy-scan').addEventListener('click',async()=>{
+  if(!lastDecoded)return;
+  try{await navigator.clipboard.writeText(lastDecoded);el<HTMLElement>('scan-status').textContent='Decoded content copied.';}
+  catch(error){el<HTMLElement>('scan-status').textContent=error instanceof Error?error.message:String(error);}
+});
+syncPalettes();
 displayFields();schedule();
