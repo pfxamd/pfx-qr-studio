@@ -15,48 +15,122 @@ let scanTicket = 0;
 let pending = 0;
 let debounce: ReturnType<typeof setTimeout> | undefined;
 const app = document.querySelector<HTMLDivElement>('#app')!;
-app.innerHTML = `<header class="topbar">
-  <a class="brand" href="./" aria-label="PFx QR Studio home"><img class="brand-logo" src="/pfx-qr-studio/pfx-logo.svg" alt="" width="45" height="40"/><span class="brand-title">PFx QR Studio</span><span class="alpha-badge">Alpha 0.1</span></a>
-  <div class="topbar-right"><span class="top-note"><span class="privacy-dot"></span>Built for your browser. No uploads.</span><button id="theme" class="ghost theme-button" type="button" aria-label="Toggle color theme">Dark mode</button></div>
+const glyph=(paths:string):string=>'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">'+paths+'</svg>';
+const icons={
+  content:glyph('<path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/>'),
+  style:glyph('<path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2h1.5A4.1 4.1 0 0 0 22 10.5 9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="11" cy="7" r="1"/><circle cx="17" cy="9" r="1"/>'),
+  export:glyph('<path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v3h16v-3"/>'),
+  scan:glyph('<path d="M4 9V5a1 1 0 0 1 1-1h4m6 0h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M7 12h10"/>'),
+  moon:glyph('<path d="M20.5 14.2A8.6 8.6 0 0 1 9.8 3.5a8.8 8.8 0 1 0 10.7 10.7Z"/>'),
+  sun:glyph('<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  check:glyph('<path d="m5 12 4.5 4.5L19 7"/>'),
+  copy:glyph('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
+  reset:glyph('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'),
+  close:glyph('<path d="M5 5 19 19M19 5 5 19"/>'),
+  arrow:glyph('<path d="M5 12h14m-6-6 6 6-6 6"/>'),
+  lock:glyph('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>')
+};
+
+app.innerHTML = `<header class="app-topbar">
+  <div class="header-brand">
+    <a class="brand" href="https://www.pfxamd.com" target="_blank" rel="noopener noreferrer" aria-label="PFxAMD home">
+      <img src="/pfx-qr-studio/pfx-logo.svg" class="brand-logo" alt="" width="38" height="34">
+      <span class="brand-wordmark">PFx <strong>QR Studio</strong></span>
+    </a>
+    <span class="brand-divider"></span>
+    <span class="brand-edition">INDEPENDENT CREATIVE TOOL <b> / 01</b></span>
+  </div>
+  <div class="header-actions"><span class="local-pill"><span class="privacy-dot"></span>ON-DEVICE WORKSPACE</span>
+    <button id="reset" type="button" class="header-icon-button" title="Reset all settings" aria-label="Reset all settings">${icons.reset}</button>
+    <button id="theme" type="button" class="header-icon-button" title="Change appearance" aria-label="Switch to dark theme">${icons.moon}</button>
+  </div>
 </header>
-<main class="workspace">
-  <section class="editor" aria-label="QR settings">
-    <div class="section-heading"><div class="eyebrow">PFx / CREATIVE TOOLS / QR STUDIO</div><h1>Every code.<br/><span>Your signature.</span></h1><p>Make a QR code that looks right, works reliably and stays yours.</p></div>
-    <div class="panel"><div class="panel-heading"><span class="step-no">01</span><div><h2>Content</h2><p>Choose what your code opens.</p></div></div>
-      <label for="kind">Content type</label><select id="kind"><option value="url">Website / YouTube link</option><option value="text">Plain text</option><option value="email">Email</option><option value="phone">Phone call</option><option value="sms">SMS message</option><option value="wifi">Wi-Fi network</option></select>
-      <div id="content-fields"></div>
-    </div>
-    <div class="panel"><div class="panel-heading"><span class="step-no">02</span><div><h2>Appearance</h2><p>Customize the code to suit your brand.</p></div></div>
-      <label>Quick palettes</label><div class="preset-row"><button type="button" class="preset" data-foreground="#111827" data-background="#ffffff"><span style="background:#111827"></span>Classic</button><button type="button" class="preset" data-foreground="#c62036" data-background="#ffffff"><span style="background:#c62036"></span>Red</button><button type="button" class="preset" data-foreground="#14532d" data-background="#ffffff"><span style="background:#14532d"></span>Forest</button><button type="button" class="preset" data-foreground="#f8fafc" data-background="#172033"><span style="background:#172033"></span>Inverse</button></div>
-      <div class="two-cols"><div><label for="foreground">QR color</label><input id="foreground" type="color"/></div><div><label for="background">Background</label><input id="background" type="color"/></div></div>
-      <label for="dotStyle">Module style</label><select id="dotStyle"><option value="square">Square</option><option value="rounded">Rounded</option><option value="dots">Dots</option><option value="classy">Classy</option><option value="classy-rounded">Classy rounded</option><option value="extra-rounded">Extra rounded</option></select>
-      <label for="correction">Error correction</label><select id="correction"><option value="L">Low (more capacity)</option><option value="M">Medium</option><option value="Q">Quartile</option><option value="H">High (recommended with logo)</option></select>
-    </div>
-    <div class="panel"><div class="panel-heading"><span class="step-no">03</span><div><h2>Quality & export</h2><p>Control output size and scan safety.</p></div></div>
-      <label for="size">Resolution <output id="size-output">640 px</output></label><input id="size" type="range" min="128" max="4096" step="64"/>
-      <label for="margin">Quiet zone <output id="margin-output">24 px</output></label><input id="margin" type="range" min="0" max="128" step="8"/><p class="field-hint">Leave some space around the code to help cameras read it.</p>
-      <label for="logo">Center logo (optional)</label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"/><button class="ghost small" id="remove-logo" type="button">Remove logo</button>
-    </div>
-    <button type="button" id="reset" class="text-button">Reset all settings</button>
-  </section>
-  <aside class="preview-side" aria-label="QR preview and tools">
-    <div class="preview-card">
-      <div class="preview-top"><div><span class="eyebrow">LIVE PREVIEW</span><h2>Ready to share.</h2></div><span id="status" class="status-pill" role="status" aria-live="polite">Initializing…</span></div>
-      <div class="preview-stage"><div class="qr-mat"><img id="qr-preview" alt="Generated QR code preview" width="320" height="320"/></div></div>
-      <div id="feedback" role="alert" class="feedback" hidden></div>
-      <div id="verified-state" class="verified-state" role="status" aria-live="polite"></div>
-      <div class="output-actions"><label for="format">DOWNLOAD FORMAT</label><div class="download-row"><select id="format" aria-label="Download format"><option value="png">PNG</option><option value="svg">SVG</option><option value="webp">WebP</option></select><button id="download" class="primary" type="button" disabled>Download QR</button></div>
-      <div class="utility-row"><button id="verify" class="ghost" type="button" disabled>Test scan</button><button id="copy-image" class="ghost" type="button" disabled>Copy PNG</button><button id="copy-content" class="ghost" type="button">Copy content</button></div>
-      <p><span class="privacy-dot"></span>Everything is generated locally on your device.</p></div>
-    </div>
-    <div class="scan-box"><div class="scan-head"><div><span class="eyebrow">QR READER</span><h2>Have a QR already?</h2><p>Decode a QR image on your device. Nothing is uploaded.</p></div></div>
-      <label class="scan-file" for="scan-file"><span>Choose an image to scan</span><small>PNG, JPEG or WebP — up to 10 MB</small></label><input id="scan-file" type="file" accept="image/png,image/jpeg,image/webp"/>
-      <div id="scan-status" class="scan-status" role="status" aria-live="polite"></div>
-      <div id="scan-result-wrap" hidden><label for="scan-result">Decoded content</label><textarea id="scan-result" rows="3" readonly></textarea><button id="copy-scan" class="ghost small" type="button">Copy decoded content</button></div>
-    </div>
+<main class="app-shell" id="app-shell" aria-label="QR Studio workspace">
+  <nav class="tool-rail" aria-label="Workspace tools">
+    <div class="rail-caption">TOOLS <span>01—04</span></div>
+    <button type="button" class="rail-button is-active" data-panel="content" aria-controls="view-content" aria-selected="true">${icons.content}<span>Content</span></button>
+    <button type="button" class="rail-button" data-panel="style" aria-controls="view-style" aria-selected="false">${icons.style}<span>Design</span></button>
+    <button type="button" class="rail-button" data-panel="export" aria-controls="view-export" aria-selected="false">${icons.export}<span>Output</span></button>
+    <button type="button" class="rail-button" data-panel="scan" aria-controls="view-scan" aria-selected="false">${icons.scan}<span>Scanner</span></button>
+    <div class="rail-bottom"><div class="rail-diamond"></div><span>PFx / 01</span></div>
+  </nav>
+  <div id="panel-backdrop" class="panel-backdrop" hidden></div>
+  <aside class="settings-column" id="settings-column" aria-label="QR customization panel">
+    <div class="settings-topline"><span><span class="topline-symbol">✳</span> CONFIGURATION</span><button id="close-panel" class="close-panel" type="button" aria-label="Close settings">${icons.close}</button></div>
+    <section class="tool-view is-active" id="view-content" data-view="content">
+      <div class="tool-view-heading"><div class="view-counter">01 <span>/ 04</span></div><h2>What does it <em>open?</em></h2><p>Start with a link, message or network.</p></div>
+      <div class="tool-scroll">
+        <div class="field-block"><label for="kind">CONTENT TYPE</label><select id="kind"><option value="url">Website / YouTube</option><option value="text">Text</option><option value="email">Email</option><option value="phone">Phone call</option><option value="sms">Text message / SMS</option><option value="wifi">Wi-Fi network</option></select></div>
+        <div id="content-fields" class="content-fields"></div>
+        <div class="panel-note"><span class="mini-dot"></span> The QR updates as you type. No manual generate step.</div>
+      </div>
+      <div class="view-foot"><span>DATA / IN BROWSER</span><span class="view-foot-line"></span><span>01</span></div>
+    </section>
+    <section class="tool-view" id="view-style" data-view="style">
+      <div class="tool-view-heading"><div class="view-counter">02 <span>/ 04</span></div><h2>Give it <em>character.</em></h2><p>Shape, contrast and color, all in balance.</p></div>
+      <div class="tool-scroll">
+        <div class="field-block"><label>CURATED PALETTES</label>
+          <div class="preset-row" role="group" aria-label="Color presets">
+            <button type="button" class="preset" data-foreground="#22392e" data-background="#ffffff"><i style="background:#22392e"></i><span>Forest</span></button>
+            <button type="button" class="preset" data-foreground="#a64e38" data-background="#ffffff"><i style="background:#a64e38"></i><span>Clay</span></button>
+            <button type="button" class="preset" data-foreground="#161e1a" data-background="#ffffff"><i style="background:#161e1a"></i><span>Ink</span></button>
+            <button type="button" class="preset" data-foreground="#ffffff" data-background="#22392e"><i style="background:#22392e;border:1px solid #fff"></i><span>Inverse</span></button>
+          </div>
+        </div>
+        <div class="field-block"><div class="two-cols">
+          <div><label for="foreground">QR COLOR</label><div class="color-well"><input id="foreground" type="color"><span>Foreground</span></div></div>
+          <div><label for="background">BACKGROUND</label><div class="color-well"><input id="background" type="color"><span>Surface</span></div></div>
+        </div></div>
+        <div class="field-block"><label for="dotStyle">MODULE SHAPE</label><select id="dotStyle"><option value="square">Sharp / Square</option><option value="rounded">Rounded</option><option value="dots">Circular dots</option><option value="classy">Classy</option><option value="classy-rounded">Classy rounded</option><option value="extra-rounded">Extra rounded</option></select></div>
+        <div class="field-block"><label for="correction">ERROR CORRECTION</label><select id="correction"><option value="L">L — Low / More capacity</option><option value="M">M — Medium</option><option value="Q">Q — Quartile</option><option value="H">H — High / Best for logos</option></select></div>
+        <div class="panel-note"><span class="mini-dot"></span> Strong contrast helps every scan.</div>
+      </div>
+      <div class="view-foot"><span>VISUAL / CUSTOM</span><span class="view-foot-line"></span><span>02</span></div>
+    </section>
+    <section class="tool-view" id="view-export" data-view="export">
+      <div class="tool-view-heading"><div class="view-counter">03 <span>/ 04</span></div><h2>Pixel <em>perfect.</em></h2><p>Made for screens, print and everything between.</p></div>
+      <div class="tool-scroll">
+        <div class="field-block"><label for="size">RESOLUTION <output id="size-output">640 px</output></label><input id="size" type="range" min="128" max="4096" step="64"><div class="range-extents"><span>128 PX</span><span>4096 PX</span></div></div>
+        <div class="field-block"><label for="margin">QUIET ZONE <output id="margin-output">24 px</output></label><input id="margin" type="range" min="0" max="128" step="8"><div class="range-extents"><span>0 PX</span><span>128 PX</span></div><p class="field-hint">Space around your symbol for easy scanning.</p></div>
+        <div class="field-block"><label for="logo">CENTER LOGO</label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><button type="button" class="inline-action" id="remove-logo">Remove image ${icons.close}</button><p class="field-hint">PNG, JPG, WebP or SVG. Max 1.5 MB.</p></div>
+        <div class="panel-note"><span class="mini-dot"></span> Use “Test scan” before printing.</div>
+      </div>
+      <div class="view-foot"><span>HIGH RES / LOCAL</span><span class="view-foot-line"></span><span>03</span></div>
+    </section>
+    <section class="tool-view" id="view-scan" data-view="scan">
+      <div class="tool-view-heading"><div class="view-counter">04 <span>/ 04</span></div><h2>Read the <em>signal.</em></h2><p>Decode an existing QR without uploading it.</p></div>
+      <div class="tool-scroll">
+        <div class="scanner-frame">${icons.scan}<strong>Decode an image</strong><p>Choose a QR image from your device. The scanner runs entirely in your browser.</p>
+          <label class="scan-file" for="scan-file">Choose QR image ${icons.arrow}</label><input id="scan-file" class="scanner-file-input" type="file" accept="image/png,image/jpeg,image/webp"/>
+          <small>PNG / JPG / WEBP — MAX 10 MB</small></div>
+        <div id="scan-status" class="scan-status" role="status" aria-live="polite"></div>
+        <div id="scan-result-wrap" class="scan-result-wrap" hidden><label for="scan-result">DECODED CONTENT</label><textarea id="scan-result" rows="4" readonly></textarea><button id="copy-scan" class="secondary full" type="button">${icons.copy} Copy result</button></div>
+        <div class="panel-note"><span class="mini-dot"></span> Uploaded files never leave this device.</div>
+      </div>
+      <div class="view-foot"><span>READER / PRIVATE</span><span class="view-foot-line"></span><span>04</span></div>
+    </section>
   </aside>
+  <section class="canvas-column" aria-label="QR live preview">
+    <div class="canvas-heading"><div class="canvas-heading-left"><span class="micro-label">PFx LABORATORY <span class="heading-split">/</span> QR COMPOSITION</span><h1>Make it <em>yours.</em></h1></div><span class="status-pill"><span class="status-dot"></span><span id="status" role="status" aria-live="polite">Initializing…</span></span></div>
+    <div class="preview-stage">
+      <div class="stage-top"><span>LIVE CANVAS — 001</span><span>QR / GENERATOR</span></div>
+      <div class="stage-body"><div class="stage-guide"><span class="guide-corner corner-tl"></span><span class="guide-corner corner-tr"></span><span class="guide-corner corner-bl"></span><span class="guide-corner corner-br"></span>
+        <div class="qr-mat"><img id="qr-preview" alt="Generated QR code preview" width="320" height="320"/></div></div></div>
+      <div class="stage-bottom"><span>COMPOSITION 01<span class="stage-middle"> • </span> ORIGINAL WORK</span><span id="preview-meta">640 × 640 PX</span></div>
+    </div>
+    <div class="feedback-area" aria-live="polite"><div id="feedback" role="alert" class="feedback" hidden></div><div id="verified-state" class="verified-state" role="status"></div></div>
+    <div class="action-dock">
+      <div class="dock-caption"><span class="micro-label">EXPORT STUDIO</span><span id="payload-preview">Ready to create.</span></div>
+      <div class="dock-controls"><select id="format" title="Export format" aria-label="Download format"><option value="png">PNG</option><option value="svg">SVG</option><option value="webp">WebP</option></select>
+        <button id="verify" class="secondary icon-action" type="button" disabled>${icons.check}<span>Test scan</span></button>
+        <button id="copy-image" class="secondary icon-action" type="button" disabled>${icons.copy}<span>Copy PNG</span></button>
+        <button id="copy-content" class="secondary icon-action" type="button">${icons.content}<span>Copy data</span></button>
+        <button id="download" class="download-action" type="button" disabled>Download QR ${icons.arrow}</button>
+      </div>
+    </div>
+  </section>
 </main>
-<footer><span>© PFx QR Studio</span><span>Powered by <a href="https://github.com/pfxamd/pfx-qr-core" target="_blank" rel="noopener noreferrer">PFx QR Core</a></span></footer>`;
+<footer class="app-footer"><div class="footer-left"><span class="signature-spark">✳</span><span>AN ORIGINAL PFx TOOL</span><span class="footer-separator"></span><span>PRIVATELY GENERATED IN YOUR BROWSER</span></div><a class="signature" href="https://www.pfxamd.com" target="_blank" rel="noopener noreferrer" aria-label="Visit PFxAMD website">DESIGNED &amp; CRAFTED BY <strong>PFxAMD<em>.</em></strong></a><div class="footer-right">MOROCCO <span>© 2026</span></div></footer>`;
 const $ = <T extends HTMLElement>(selector:string) => document.querySelector<T>(selector)!;
 const el = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const preview=el<HTMLImageElement>('qr-preview');
