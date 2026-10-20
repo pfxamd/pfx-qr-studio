@@ -2,6 +2,8 @@ import { createBrowserQrCore, encodePayload, validateDocument } from '@pfxamd/qr
 import type { QrDocument, QrRenderFormat } from '@pfxamd/qr-core';
 import './style.css';
 
+declare const __PFX_BUILD_VERSION__: string;
+
 type Kind = 'url' | 'text' | 'email' | 'phone' | 'sms' | 'wifi';
 type Form = { kind: Kind; value: string; ssid: string; password: string; security: 'WPA' | 'WEP' | 'nopass'; hidden: boolean; subject: string; body: string; message: string; size: number; margin: number; foreground: string; background: string; correction: 'L'|'M'|'Q'|'H'; dotStyle: QrDocument['dotStyle']; logo?: string; };
 const initial: Form = {kind:'url',value:'https://example.com',ssid:'',password:'',security:'WPA',hidden:false,subject:'',body:'',message:'',size:640,margin:24,foreground:'#22392e',background:'#ffffff',correction:'H',dotStyle:'square'};
@@ -38,7 +40,7 @@ app.innerHTML = `<header class="app-topbar">
       <span class="brand-wordmark">PFx <strong>QR Studio</strong></span>
     </a>
     <span class="brand-divider"></span>
-    <span class="brand-edition">INDEPENDENT CREATIVE TOOL <b> / 01</b></span>
+    <span class="release-badge" aria-label="Current alpha release v${__PFX_BUILD_VERSION__}" title="Exact published build version"><span class="release-stage">ALPHA</span><span class="release-version">v${__PFX_BUILD_VERSION__}</span></span>
   </div>
   <div class="header-actions"><span class="local-pill"><span class="privacy-dot"></span>ON-DEVICE WORKSPACE</span>
     <button id="reset" type="button" class="header-icon-button" title="Reset all settings" aria-label="Reset all settings">${icons.reset}</button>
@@ -47,27 +49,27 @@ app.innerHTML = `<header class="app-topbar">
 </header>
 <main class="app-shell" id="app-shell" aria-label="QR Studio workspace">
   <nav class="tool-rail" aria-label="Workspace tools">
-    <div class="rail-caption">TOOLS <span>01—04</span></div>
+    <div class="rail-caption">TOOLS</div>
     <button type="button" class="rail-button is-active" data-panel="content" aria-controls="view-content" aria-selected="true">${icons.content}<span>Content</span></button>
     <button type="button" class="rail-button" data-panel="style" aria-controls="view-style" aria-selected="false">${icons.style}<span>Design</span></button>
     <button type="button" class="rail-button" data-panel="export" aria-controls="view-export" aria-selected="false">${icons.export}<span>Output</span></button>
     <button type="button" class="rail-button" data-panel="scan" aria-controls="view-scan" aria-selected="false">${icons.scan}<span>Scanner</span></button>
-    <div class="rail-bottom"><div class="rail-diamond"></div><span>PFx / 01</span></div>
+    <div class="rail-bottom"><div class="rail-diamond"></div><span>PFx STUDIO</span></div>
   </nav>
   <div id="panel-backdrop" class="panel-backdrop" hidden></div>
   <aside class="settings-column" id="settings-column" aria-label="QR customization panel">
     <div class="settings-topline"><span><span class="topline-symbol">✳</span> CONFIGURATION</span><button id="close-panel" class="close-panel" type="button" aria-label="Close settings">${icons.close}</button></div>
     <section class="tool-view is-active" id="view-content" data-view="content">
-      <div class="tool-view-heading"><div class="view-counter">01 <span>/ 04</span></div><h2>What does it <em>open?</em></h2><p>Start with a link, message or network.</p></div>
+      <div class="tool-view-heading"><div class="view-kicker">CONTENT</div><h2>What does it <em>open?</em></h2><p>Start with a link, message or network.</p></div>
       <div class="tool-scroll">
         <div class="field-block"><label for="kind">CONTENT TYPE</label><select id="kind"><option value="url">Website / YouTube</option><option value="text">Text</option><option value="email">Email</option><option value="phone">Phone call</option><option value="sms">Text message / SMS</option><option value="wifi">Wi-Fi network</option></select></div>
         <div id="content-fields" class="content-fields"></div>
         <div class="panel-note"><span class="mini-dot"></span> The QR updates as you type. No manual generate step.</div>
       </div>
-      <div class="view-foot"><span>DATA / IN BROWSER</span><span class="view-foot-line"></span><span>01</span></div>
+      <div class="view-foot"><span>DATA / IN BROWSER</span><span class="view-foot-line"></span></div>
     </section>
     <section class="tool-view" id="view-style" data-view="style">
-      <div class="tool-view-heading"><div class="view-counter">02 <span>/ 04</span></div><h2>Give it <em>character.</em></h2><p>Shape, contrast and color, all in balance.</p></div>
+      <div class="tool-view-heading"><div class="view-kicker">DESIGN</div><h2>Give it <em>character.</em></h2><p>Shape, contrast and color, all in balance.</p></div>
       <div class="tool-scroll">
         <div class="field-block"><label>CURATED PALETTES</label>
           <div class="preset-row" role="group" aria-label="Color presets">
@@ -85,20 +87,20 @@ app.innerHTML = `<header class="app-topbar">
         <div class="field-block"><label for="correction">ERROR CORRECTION</label><select id="correction"><option value="L">L — Low / More capacity</option><option value="M">M — Medium</option><option value="Q">Q — Quartile</option><option value="H">H — High / Best for logos</option></select></div>
         <div class="panel-note"><span class="mini-dot"></span> Strong contrast helps every scan.</div>
       </div>
-      <div class="view-foot"><span>VISUAL / CUSTOM</span><span class="view-foot-line"></span><span>02</span></div>
+      <div class="view-foot"><span>VISUAL / CUSTOM</span><span class="view-foot-line"></span></div>
     </section>
     <section class="tool-view" id="view-export" data-view="export">
-      <div class="tool-view-heading"><div class="view-counter">03 <span>/ 04</span></div><h2>Pixel <em>perfect.</em></h2><p>Made for screens, print and everything between.</p></div>
+      <div class="tool-view-heading"><div class="view-kicker">OUTPUT</div><h2>Pixel <em>perfect.</em></h2><p>Made for screens, print and everything between.</p></div>
       <div class="tool-scroll">
         <div class="field-block"><label for="size">RESOLUTION <output id="size-output">640 px</output></label><input id="size" type="range" min="128" max="4096" step="64"><div class="range-extents"><span>128 PX</span><span>4096 PX</span></div></div>
         <div class="field-block"><label for="margin">QUIET ZONE <output id="margin-output">24 px</output></label><input id="margin" type="range" min="0" max="128" step="8"><div class="range-extents"><span>0 PX</span><span>128 PX</span></div><p class="field-hint">Space around your symbol for easy scanning.</p></div>
         <div class="field-block"><label for="logo">CENTER LOGO</label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><button type="button" class="inline-action" id="remove-logo">Remove image ${icons.close}</button><p class="field-hint">PNG, JPG, WebP or SVG. Max 1.5 MB.</p></div>
         <div class="panel-note"><span class="mini-dot"></span> Use “Test scan” before printing.</div>
       </div>
-      <div class="view-foot"><span>HIGH RES / LOCAL</span><span class="view-foot-line"></span><span>03</span></div>
+      <div class="view-foot"><span>HIGH RES / LOCAL</span><span class="view-foot-line"></span></div>
     </section>
     <section class="tool-view" id="view-scan" data-view="scan">
-      <div class="tool-view-heading"><div class="view-counter">04 <span>/ 04</span></div><h2>Read the <em>signal.</em></h2><p>Decode an existing QR without uploading it.</p></div>
+      <div class="tool-view-heading"><div class="view-kicker">SCANNER</div><h2>Read the <em>signal.</em></h2><p>Decode an existing QR without uploading it.</p></div>
       <div class="tool-scroll">
         <div class="scanner-frame">${icons.scan}<strong>Decode an image</strong><p>Choose a QR image from your device. The scanner runs entirely in your browser.</p>
           <label class="scan-file" for="scan-file">Choose QR image ${icons.arrow}</label><input id="scan-file" class="scanner-file-input" type="file" accept="image/png,image/jpeg,image/webp"/>
@@ -107,16 +109,16 @@ app.innerHTML = `<header class="app-topbar">
         <div id="scan-result-wrap" class="scan-result-wrap" hidden><label for="scan-result">DECODED CONTENT</label><textarea id="scan-result" rows="4" readonly></textarea><button id="copy-scan" class="secondary full" type="button">${icons.copy} Copy result</button></div>
         <div class="panel-note"><span class="mini-dot"></span> Uploaded files never leave this device.</div>
       </div>
-      <div class="view-foot"><span>READER / PRIVATE</span><span class="view-foot-line"></span><span>04</span></div>
+      <div class="view-foot"><span>READER / PRIVATE</span><span class="view-foot-line"></span></div>
     </section>
   </aside>
   <section class="canvas-column" aria-label="QR live preview">
     <div class="canvas-heading"><div class="canvas-heading-left"><span class="micro-label">PFx LABORATORY <span class="heading-split">/</span> QR COMPOSITION</span><h1>Make it <em>yours.</em></h1></div><span class="status-pill"><span class="status-dot"></span><span id="status" role="status" aria-live="polite">Initializing…</span></span></div>
     <div class="preview-stage">
-      <div class="stage-top"><span>LIVE CANVAS — 001</span><span>QR / GENERATOR</span></div>
+      <div class="stage-top"><span>LIVE CANVAS</span><span>QR / GENERATOR</span></div>
       <div class="stage-body"><div class="stage-guide"><span class="guide-corner corner-tl"></span><span class="guide-corner corner-tr"></span><span class="guide-corner corner-bl"></span><span class="guide-corner corner-br"></span>
         <div class="qr-mat"><img id="qr-preview" alt="Generated QR code preview" width="320" height="320"/></div></div></div>
-      <div class="stage-bottom"><span>COMPOSITION 01<span class="stage-middle"> • </span> ORIGINAL WORK</span><span id="preview-meta">640 × 640 PX</span></div>
+      <div class="stage-bottom"><span>ORIGINAL WORK</span><span id="preview-meta">640 × 640 PX</span></div>
     </div>
     <div class="feedback-area" aria-live="polite"><div id="feedback" role="alert" class="feedback" hidden></div><div id="verified-state" class="verified-state" role="status"></div></div>
     <div class="action-dock">
