@@ -1,16 +1,34 @@
 # PFx QR Studio
 
-A responsive, local-first QR design workspace, powered by the independent [PFx QR Core](https://github.com/pfxamd/pfx-qr-core).
+A responsive, privacy-first workspace for creating, designing, exporting, scanning, and validating QR codes directly in your browser.
+
+Live application: https://pfxamd.github.io/pfx-qr-studio/
+
+## Features
+
+- Generate QR content for websites (including YouTube), text, email (subject and body), phone, SMS (message), and Wi-Fi (password-protected/open and hidden networks).
+- Choose six module styles, foreground/background colors, quick palettes, and error correction.
+- Adjust quiet zone (0–128 px) and output resolution (128–4096 px).
+- Add a logo, export PNG/SVG/WebP, copy PNG, or copy encoded content.
+- Test generated QR images against their original content with the scanning engine.
+- Scan PNG/JPEG/WebP QR images locally and copy decoded results.
+- Responsive light/dark interface, with local preference storage. Images are processed in your browser, not uploaded.
+
+## Architecture
+
+The generation and scanning engine is maintained separately in [PFx QR Core](https://github.com/pfxamd/pfx-qr-core). Studio imports its public API; its build pins a specific QR Core commit for reproducible deployments.
 
 ## Development
 
 ```bash
+git clone https://github.com/pfxamd/pfx-qr-studio.git
+cd pfx-qr-studio
 git clone https://github.com/pfxamd/pfx-qr-core.git core
 npm install
 npm run dev
 npm run build
 ```
 
-The `core/` checkout is excluded from this repository and is resolved by Vite at build time. GitHub Actions checks out both repositories to build and publish the website. The app supports URL, text, email, phone, SMS, and Wi-Fi payloads with SVG, PNG, and WebP export. Designs are generated in your browser.
+GitHub Pages publishes automatically from `main`. The deployment workflow checks out both repositories and builds the static website.
 
-Early alpha: QR Studio UI is under active development.
+**Status:** Alpha 0.1. Test code readability, especially with custom styles, inverted colors, or logos, before printing or distributing it.
