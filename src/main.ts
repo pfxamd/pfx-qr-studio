@@ -158,7 +158,7 @@ function syncPalettes() {
 }
 for(const key of ['foreground','background','correction','dotStyle','size','margin'] as const){
   const field=el<HTMLInputElement|HTMLSelectElement>(key);field.value=String(state[key]);
-  field.addEventListener('input',()=>{state={...state,[key]:key==='size'?Number(field.value):field.value};if(key==='size'||key==='margin')el<HTMLOutputElement>(key+'-output').textContent=field.value+' px';syncPalettes();schedule();});
+  field.addEventListener('input',()=>{state={...state,[key]:(key==='size'||key==='margin')?Number(field.value):field.value};if(key==='size'||key==='margin')el<HTMLOutputElement>(key+'-output').textContent=field.value+' px';syncPalettes();schedule();});
 }
 el<HTMLOutputElement>('size-output').textContent=state.size+' px';
 el<HTMLOutputElement>('margin-output').textContent=state.margin+' px';
