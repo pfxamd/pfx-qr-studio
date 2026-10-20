@@ -1,16 +1,16 @@
 import { createBrowserQrCore, encodePayload, validateDocument } from '@pfxamd/qr-core';
 import type { QrDocument, QrRenderFormat } from '@pfxamd/qr-core';
 import './style.css';
-import './identity.css';
 
 type Kind = 'url' | 'text' | 'email' | 'phone' | 'sms' | 'wifi';
 type Form = { kind: Kind; value: string; ssid: string; password: string; security: 'WPA' | 'WEP' | 'nopass'; hidden: boolean; subject: string; body: string; message: string; size: number; margin: number; foreground: string; background: string; correction: 'L'|'M'|'Q'|'H'; dotStyle: QrDocument['dotStyle']; logo?: string; };
-const initial: Form = {kind:'url',value:'https://example.com',ssid:'',password:'',security:'WPA',hidden:false,subject:'',body:'',message:'',size:640,margin:24,foreground:'#111827',background:'#ffffff',correction:'H',dotStyle:'square'};
+const initial: Form = {kind:'url',value:'https://example.com',ssid:'',password:'',security:'WPA',hidden:false,subject:'',body:'',message:'',size:640,margin:24,foreground:'#22392e',background:'#ffffff',correction:'H',dotStyle:'square'};
 const saved = localStorage.getItem('pfx-qr-studio-preferences');
 let state: Form = {...initial};
 if (saved) { try {const json: unknown=JSON.parse(saved); if(json && typeof json==='object'){const o=json as Partial<Form>;state={...initial,...o,logo:undefined};}} catch {/* ignore invalid storage */} }
 let lastValid: {blob: Blob; payload: string} | null = null;
 let lastDecoded = '';
+let activePanel='content';
 let scanTicket = 0;
 let pending = 0;
 let debounce: ReturnType<typeof setTimeout> | undefined;
@@ -187,6 +187,7 @@ function savePreferences() {
   localStorage.setItem('pfx-qr-studio-preferences',JSON.stringify(settings));
 }
 function schedule() {
+  updatePreviewInfo();
   clearTimeout(debounce);
   pending++;
   savePreferences();
@@ -216,6 +217,7 @@ async function render(ticket:number) {
     el<HTMLButtonElement>('verify').disabled=false;
     el<HTMLButtonElement>('copy-image').disabled=false;
     el<HTMLElement>('status').textContent='Ready';
+    updatePreviewInfo();
     feedback(validation.warnings.join(' · '));
   }catch(error) {
     if(ticket!==pending)return;
@@ -224,6 +226,12 @@ async function render(ticket:number) {
     el<HTMLElement>('status').textContent='Check input';
     feedback(error instanceof Error?error.message:String(error),true);
   }
+}
+function updatePreviewInfo() {
+  const raw=state.kind==='wifi'?state.ssid:state.value;
+  const value=raw.trim() || 'Enter content to begin';
+  el<HTMLElement>('payload-preview').textContent=value;
+  el<HTMLElement>('preview-meta').textContent=state.size+' × '+state.size+' PX / '+state.dotStyle.toUpperCase();
 }
 function syncPalettes() {
   document.querySelectorAll<HTMLButtonElement>('.preset').forEach(button=>{
@@ -260,7 +268,10 @@ el<HTMLButtonElement>('download').addEventListener('click',async ()=>{
 });
 function setTheme(isDark:boolean) {
   document.documentElement.classList.toggle('dark',isDark);
-  el<HTMLButtonElement>('theme').textContent=isDark?'Light mode':'Dark mode';
+  const toggle=el<HTMLButtonElement>('theme');
+  toggle.innerHTML=isDark?icons.sun:icons.moon;
+  toggle.setAttribute('aria-label',isDark?'Switch to light theme':'Switch to dark theme');
+  toggle.title=isDark?'Light appearance':'Dark appearance';
   localStorage.setItem('pfx-qr-studio-theme',isDark?'dark':'light');
 }
 el<HTMLButtonElement>('theme').addEventListener('click',()=>setTheme(!document.documentElement.classList.contains('dark')));
@@ -353,5 +364,42 @@ el<HTMLButtonElement>('copy-scan').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(lastDecoded);el<HTMLElement>('scan-status').textContent='Decoded content copied.';}
   catch(error){el<HTMLElement>('scan-status').textContent=error instanceof Error?error.message:String(error);}
 });
+function isCompactLayout():boolean{return window.matchMedia('(max-width:800px)').matches;}
+function closeSettings() {
+  el<HTMLElement>('settings-column').classList.remove('is-open');
+  el<HTMLElement>('panel-backdrop').hidden=true;
+}
+function switchPanel(next:string,openOnMobile=true) {
+  const wasOpen=el<HTMLElement>('settings-column').classList.contains('is-open');
+  const same=activePanel===next;
+  activePanel=next;
+  document.querySelectorAll<HTMLButtonElement>('[data-panel]').forEach(button=>{
+    const selected=button.dataset.panel===next;
+    button.classList.toggle('is-active',selected);
+    button.setAttribute('aria-selected',String(selected));
+  });
+  document.querySelectorAll<HTMLElement>('[data-view]').forEach(view=>{
+    const selected=view.dataset.view===next;
+    view.classList.toggle('is-active',selected);
+    if(selected)view.querySelector<HTMLElement>('.tool-scroll')?.scrollTo({top:0});
+  });
+  if(isCompactLayout()){
+    if(same&&wasOpen){closeSettings();return;}
+    if(openOnMobile){
+      el<HTMLElement>('settings-column').classList.add('is-open');
+      el<HTMLElement>('panel-backdrop').hidden=false;
+    }
+  }else{closeSettings();}
+}
+document.querySelectorAll<HTMLButtonElement>('[data-panel]').forEach(button=>{
+  button.addEventListener('click',()=>switchPanel(button.dataset.panel??'content'));
+});
+el<HTMLButtonElement>('close-panel').addEventListener('click',closeSettings);
+el<HTMLElement>('panel-backdrop').addEventListener('click',closeSettings);
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&el<HTMLElement>('settings-column').classList.contains('is-open'))closeSettings();
+});
+window.addEventListener('resize',()=>{if(!isCompactLayout())closeSettings();});
+el<HTMLSelectElement>('format').addEventListener('change',updatePreviewInfo);
 syncPalettes();
 displayFields();schedule();
