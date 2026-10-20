@@ -252,12 +252,12 @@ svg{display:block;width:20px;height:20px;flex:none}
   .stage-guide{height:min(94%,360px)}
   .qr-mat{inset:9px;padding:12px;box-shadow:7px 9px 0 #22392e10}
   .action-dock{padding:9px 9px 11px;gap:6px}
-  .dock-controls{display:grid;grid-template-columns:78px repeat(3,minmax(0,1fr));gap:5px}
-  .dock-controls select{width:100%;height:40px}
-  .dock-controls .secondary{min-height:40px;padding:0 5px}
+  .dock-controls{display:flex;gap:5px}
+  .dock-controls select{flex:0 0 64px;width:64px;height:41px}
+  .dock-controls .secondary{flex:0 0 35px;width:35px;min-height:41px;padding:0}
   .dock-controls .secondary svg{width:15px;height:15px}
-  .dock-controls .secondary span{font-size:0}
-  .dock-controls .download-action{grid-column:1/-1;min-height:42px}
+  .dock-controls .secondary span{display:none}
+  .dock-controls .download-action{flex:1;min-width:0;min-height:41px;padding:0 5px;font-size:11px;gap:5px}
   .footer-left .footer-separator,.footer-left .footer-separator+span{display:none}
   .footer-left{font-size:8px}
 }
