@@ -1,0 +1,23 @@
+{
+  "product": "PFx QR Studio",
+  "channel": "Alpha",
+  "baseline": "582d388273f014b03dc3e41da5a305c732718f67",
+  "baseVersion": "0.1.0-alpha.22",
+  "sourcePaths": [
+    "src",
+    "app",
+    "apps",
+    "public",
+    "assets",
+    "index.html",
+    "diagnostics",
+    "scripts",
+    "release.config.json",
+    "vite.config.ts",
+    "vite.config.js",
+    "package.json",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    ".github/workflows"
+  ]
+}

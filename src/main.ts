@@ -2,7 +2,7 @@ import { createBrowserQrCore, encodePayload, validateDocument } from '@pfxamd/qr
 import type { QrDocument, QrRenderFormat } from '@pfxamd/qr-core';
 import './style.css';
 
-declare const __PFX_BUILD_VERSION__: string;
+declare const __PFX_APP_RELEASE__: { version: string; channel: string; label: string; commit: string };
 
 type Kind = 'url' | 'text' | 'email' | 'phone' | 'sms' | 'wifi';
 type Form = { kind: Kind; value: string; ssid: string; password: string; security: 'WPA' | 'WEP' | 'nopass'; hidden: boolean; subject: string; body: string; message: string; size: number; margin: number; foreground: string; background: string; correction: 'L'|'M'|'Q'|'H'; dotStyle: QrDocument['dotStyle']; logo?: string; };
@@ -40,7 +40,7 @@ app.innerHTML = `<header class="app-topbar">
       <span class="brand-wordmark">PFx <strong>QR Studio</strong></span>
     </a>
     <span class="brand-divider"></span>
-    <span class="release-badge" aria-label="Current alpha release v${__PFX_BUILD_VERSION__}" title="Exact published build version"><span class="release-stage">ALPHA</span><span class="release-version">v${__PFX_BUILD_VERSION__}</span></span>
+    <span class="release-badge" aria-label="Current alpha release v${__PFX_APP_RELEASE__.version}" title="Exact published build version"><span class="release-stage">ALPHA</span><span class="release-version">v${__PFX_APP_RELEASE__.version}</span></span>
   </div>
   <div class="header-actions"><span class="local-pill"><span class="privacy-dot"></span>ON-DEVICE WORKSPACE</span>
     <button id="reset" type="button" class="header-icon-button" title="Reset all settings" aria-label="Reset all settings">${icons.reset}</button>
