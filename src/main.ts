@@ -1,3 +1,18 @@
+/**
+ * ┌──────────────────────────────────────────────┐
+ * │                                              │
+ * │  PFxamd                                      │
+ * │  Ahmed                                       │
+ * │                                              │
+ * └──────────────────────────────────────────────┘
+ *
+ * @project     PFx QR Studio
+ * @author      Ahmed
+ * @brand       PFxamd
+ * @website     https://www.pfxamd.com
+ * @repository  https://github.com/pfxamd/pfx-qr-studio
+ */
+
 import { createBrowserQrCore, encodePayload, validateDocument } from '@pfxamd/qr-core';
 import type { QrDocument, QrRenderFormat } from '@pfxamd/qr-core';
 import './style.css';
