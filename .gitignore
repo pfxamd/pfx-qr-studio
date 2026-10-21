@@ -2,3 +2,5 @@ node_modules/
 dist/
 core/
 .DS_Store
+
+/.pfx-release-tools/
